@@ -13,6 +13,9 @@ Parameters:
     Type: String
     Default: ''
     Description: Etsy API Key in plain text.
+  ListingProcessorFunctionName:
+    Type: String
+    Description: Name of lambda function that should be invoked to process listings. Note, this must be a function name and not a function ARN.
   ShopId:
     Type: String
     Description: ShopId to poll for active listings.
@@ -60,6 +63,8 @@ Resources:
           SHOP_ID: !Ref ShopId
           INCLUDE_IMAGES: !Ref IncludeImages
           REQUESTS_PER_SECOND: !Ref RequestsPerSecond
+          POLLING_CHECKPOINT_TABLE_NAME: !Ref PollingCheckpoint
+          LISTING_PROCESSOR_FUNCTION_NAME: !Ref ListingProcessorFunctionName
       Events:
         Timer:
           Type: Schedule
