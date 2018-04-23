@@ -1,32 +1,45 @@
-import { KMS } from "aws-sdk";
+import {KMS} from "aws-sdk";
 
 export class AppConfig {
-    private _apiKey: string;
+    private _apiKey : string;
 
-    get apiKey(): string {
-        if(!this._apiKey){
-            if(!process.env['ENCRYPTED_API_KEY']){
+    public shopId : string = process.env['SHOP_ID'];
+    public includeImages : boolean = process.env['INCLUDE_IMAGES'] === 'true'
+        ? true
+        : false;
+    public requestsPerSecond : number = +process.env['REQUESTS_PER_SECOND'];
+
+    get apiKey() : string {
+        if(!this._apiKey) {
+            const encryptedApiKey = process.env['ENCRYPTED_API_KEY'];
+            if (!encryptedApiKey) {
                 this._apiKey = process.env['PLAINTEXT_API_KEY'];
-            }else{
-                const kms = new KMS();
-                const params = {CiphertextBlob: process.env['ENCRYPTED_API_KEY']};
-                kms.decrypt(params,(err,data) => {
-                    if(err){
-
-                    }else{
-                        ;
-                    }
-                })
+            } else {
+                this.decryptApiKey(encryptedApiKey);
             }
         }
         return this._apiKey;
     }
 
-    public static env(key: string, defaultValue: string = ''): string {
+    private async decryptApiKey(encryptedApiKey : string) {
+        const kms = new KMS();
+        const params = {
+            CiphertextBlob: new Buffer(encryptedApiKey, 'base64')
+        };
+        await kms.decrypt(params, (err, data) => {
+            if (err) {} else {
+                this._apiKey = data
+                    .Plaintext
+                    .toString();
+            }
+        })
+    }
+
+    public static env(key : string, defaultValue : string = '') : string {
         let rval = process.env[key];
         if (rval == null) {
-          rval = defaultValue;
+            rval = defaultValue;
         }
         return rval;
-      }
+    }
 }
