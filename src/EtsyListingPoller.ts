@@ -1,7 +1,7 @@
 import { of } from 'rxjs/observable/of';
 import { forkJoin } from 'rxjs/observable/forkJoin';
 import { EmptyObservable } from 'rxjs/observable/EmptyObservable';
-import { map, flatMap } from 'rxjs/operators';
+import { map, flatMap, retry, catchError } from 'rxjs/operators';
 import { Observer, empty } from 'rxjs/Observer';
 import { Observable } from 'rxjs/Observable';
 
@@ -16,6 +16,7 @@ import {
   ListingImage,
   ListingProcessor
 } from '.';
+import { Logger } from './Logger';
 
 export class EstyListingPoller {
   private readonly URL_BASE = 'https://openapi.etsy.com/v2';
@@ -37,11 +38,12 @@ export class EstyListingPoller {
   }
 
   public poll(): void {
-    this.doPoll().subscribe(pollResults => {
-      if (pollResults) {
+    this.doPoll().subscribe(
+      pollResults => {
         this.processor.process(pollResults);
-      }
-    });
+      },
+      err => Logger.error('Polling encountered an error: ', err)
+    );
   }
 
   doPoll(): Observable<EtsyListing[]> {
@@ -52,12 +54,19 @@ export class EstyListingPoller {
       flatMap(results => {
         let rval: Observable<EtsyListing[]>;
         const sortedListings = this.sortEtsyListings(results[0]);
+        Logger.info('Recieved listings: ', sortedListings.length);
         const lastHash = results[1];
+        Logger.info('Received previous checkpoint hash: ', lastHash);
         const currentHash = this.toListingsHash(sortedListings);
+        Logger.info('Calculated current hash: ', currentHash);
 
         if (currentHash === lastHash) {
+          Logger.info('Exiting, no changes detected.');
           rval = new EmptyObservable();
         } else {
+          Logger.info(
+            'Updating checkpointhash , fetching images if requested, and triggering event.'
+          );
           this.checkpoint.updateHash(currentHash);
           rval = this.config.includeImages
             ? forkJoin(sortedListings.map(listing => this.getImages(listing)))
@@ -73,24 +82,25 @@ export class EstyListingPoller {
     return this.callAPI(`/shops/${this.config.shopId}/listings/active`).pipe(
       map((result: any[]) => {
         return result.map(listing => this.toEtsyListing(listing));
-      })
+      }),
+      retry(3)
     );
   }
 
   private callAPI(url: string): Observable<any[]> {
-    const apiCallUrl = `${this.URL_BASE}${url}?api_key=${this.config.apiKey}`;
-    console.log('Calling url: ', apiCallUrl);
+    const baseUrl = `${this.URL_BASE}${url}`;
     return Observable.create((observer: Observer<any[]>) => {
-      this.limiter.removeTokens(1, () =>
-        got(apiCallUrl, {
+      this.limiter.removeTokens(1, () => {
+        Logger.debug('Calling api url: ', baseUrl);
+        got(`${baseUrl}?api_key=${this.config.apiKey}`, {
           json: true
         })
           .then(resp => {
             observer.next(resp.body.results);
             observer.complete();
           })
-          .catch(err => console.error(err))
-      );
+          .catch(err => observer.error(err));
+      });
     });
   }
 
@@ -134,8 +144,13 @@ export class EstyListingPoller {
     return this.callAPI(`/listings/${listing.listingId}/images`).pipe(
       map((result: any[]) => {
         listing.images = this.toListingImages(result);
+        Logger.debug(
+          `Fetched images for listing[${listing.listingId}]: `,
+          listing.images
+        );
         return listing;
-      })
+      }),
+      retry(3)
     );
   }
 
