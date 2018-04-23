@@ -1,0 +1,88 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Parameters:
+  EncryptedApiKey:
+    Type: String
+    Default: ''
+    Description: Encrypted Etsy API Key encrypted ciphertext blob as a base64-encoded string.
+  DecryptionKeyName:
+    Type: String
+    Default: invalid
+    Description: KMS key name of the key used to encrypt the Etsy API Key. Note, this must be just the key name (UUID), not the full key ARN. It's assumed the key is owned by the same account, in the same region as the app.
+  PlainTextApiKey:
+    Type: String
+    Default: ''
+    Description: Etsy API Key in plain text.
+  ShopId:
+    Type: String
+    Description: ShopId to poll for active listings.
+  IncludeImages:
+    Type: String
+    AllowedValues:
+      - true
+      - false
+    Default: true
+    Description: Flag indicating if image urls should be included.
+  PollingFrequencyInMinutes:
+    Type: Number
+    MinValue: 1
+    Default: 1
+    Description: Frequency in minutes to poll for active listing changes.
+  RequestsPerSecond:
+    Type: Number
+    MinValue: 1
+    Default: 10
+    Description: Max number of requests that can be made to the api per second.  This should not be changed unless an exception has been requested from Etsy.
+
+Conditions:
+  IsPollingFrequencyInMinutesSingular: !Equals [!Ref PollingFrequencyInMinutes, 1]
+
+Resources:
+  EstyShopListingPoller:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs8.10
+      Handler: lambda/EstyShopListingPollerHandler.handler
+      Tracing: Active
+      MemorySize: 512
+      Timeout: 60
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref EstyShopListingPollerFunctionName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref PollingCheckpoint
+        - KMSDecryptPolicy:
+            KeyId: !Ref DecryptionKeyName
+      Environment:
+        Variables:
+          ENCRYPTED_API_KEY: !Ref EncryptedApiKey
+          PLAINTEXT_API_KEY: !Ref PlainTextApiKey
+          SHOP_ID: !Ref ShopId
+          INCLUDE_IMAGES: !Ref IncludeImages
+          REQUESTS_PER_SECOND: !Ref RequestsPerSecond
+      Events:
+        Timer:
+          Type: Schedule
+          Properties:
+            Schedule: !If [IsPollingFrequencyInMinutesSingular, !Sub 'rate(${PollingFrequencyInMinutes} minute)', !Sub 'rate(${PollingFrequencyInMinutes} minutes)']
+
+  PollingCheckpoint:
+    Type: AWS::Serverless::SimpleTable
+
+Outputs:
+  EstyShopListingPollerFunctionName:
+    Value: !Ref EstyShopListingPoller
+    Export:
+      Name: !Sub ${AWS::StackName}-EstyShopListingPollerFunctionName
+  EstyShopListingPollerFunctionArn:
+    Value: !GetAtt EstyShopListingPoller.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-EstyShopListingPollerFunctionArn
+  PollingCheckpointTableName:
+    Value: !Ref PollingCheckpoint
+    Export:
+      Name: !Sub ${AWS::StackName}-PollingCheckpointTableName
+  PollingCheckpointTableArn:
+    Value: !GetAtt PollingCheckpoint.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-PollingCheckpointTableArn
