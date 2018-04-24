@@ -1,13 +1,31 @@
-import { EtsyListing, ListingProcessor } from '.';
+import {Lambda} from 'aws-sdk';
+import {InvocationRequest} from 'aws-sdk/clients/lambda';
+
+import {Logger} from './Logger';
+import {EtsyListing, ListingProcessor} from '.';
 
 export class LambdaListingProcessor implements ListingProcessor {
-  private lambdaFunctionName: string;
+  private lambdaFunctionName : string;
+  private lambda : Lambda = new Lambda();
 
-  constructor(lambdaFunctionName: string) {
+  constructor(lambdaFunctionName : string) {
     this.lambdaFunctionName = lambdaFunctionName;
   }
 
-  process(listings: EtsyListing[]): void {
-    throw new Error('Method not implemented.');
+  process(listings : EtsyListing[]) : void {
+    const params: InvocationRequest = {
+      FunctionName: this.lambdaFunctionName,
+      InvocationType: 'Event',
+      Payload: JSON.stringify(listings)
+    }
+    this
+      .lambda
+      .invoke(params, (err, data) => {
+        if (err) {
+          Logger.error(`Encountered error publishing listings to lambda[${this.lambdaFunctionName}]: `, err);
+        } else {
+          Logger.debug(`Successfully published listings to lambda[${this.lambdaFunctionName}]: `, data);
+        }
+      })
   }
 }
