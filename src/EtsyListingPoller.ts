@@ -2,7 +2,7 @@ import { of } from 'rxjs/observable/of';
 import { forkJoin } from 'rxjs/observable/forkJoin';
 import { EmptyObservable } from 'rxjs/observable/EmptyObservable';
 import { map, flatMap, retry, catchError } from 'rxjs/operators';
-import { Observer, empty } from 'rxjs/Observer';
+import { Observer } from 'rxjs/Observer';
 import { Observable } from 'rxjs/Observable';
 
 import * as got from 'got';
