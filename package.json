@@ -1,18 +1,19 @@
 {
   "name": "aws-serverless-etsy-shop-event-source",
   "version": "1.0.0",
-  "description": "A serverless app that periodically polls the public Etsy API and invokes a given lambda function to process changes to the active listings for a specific shop.",
+  "description":
+    "A serverless app that periodically polls the public Etsy API and invokes a given lambda function to process changes to the active listings for a specific shop.",
   "main": "index.js",
   "author": "William Weiss <william@codification.org>",
   "license": "MIT",
   "private": false,
   "scripts": {
-    "preversion": "yarn test",
-    "version": "yarn build && git add -A .",
-    "postversion": "git push && git push --tags",
-    "clean": "rimraf \"dist/**\"",
+    "clean": "rimraf \"dist/**\" \"lambda-dist/**\"",
     "test": "tape -r ts-node/register src/**/*.spec.ts",
-    "build": "yarn clean && tsc && yarn test"
+    "package":
+      "gulp package-lambda && aws cloudformation package --template-file ./app.template.yml --output-template-file ./packaged-template.yml --s3-bucket ",
+    "build": "yarn clean && yarn test && yarn package ",
+    "deploy": "yarn build"
   },
   "dependencies": {
     "got": "^8.3.0",
@@ -30,7 +31,13 @@
     "@types/winston": "^2.3.9",
     "aws-lambda": "^0.1.2",
     "aws-sdk": "^2.226.1",
+    "del": "^3.0.0",
     "dotenv": "^5.0.1",
+    "gulp": "^3.9.1",
+    "gulp-install": "^1.1.0",
+    "gulp-npm-files": "^0.1.3",
+    "gulp-typescript": "^4.0.2",
+    "gulp-zip": "^4.1.0",
     "rimraf": "^2.6.2",
     "tape": "^4.9.0",
     "ts-node": "^6.0.0",
