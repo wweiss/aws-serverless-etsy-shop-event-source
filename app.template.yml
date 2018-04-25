@@ -29,7 +29,7 @@ Parameters:
   PollingFrequencyInMinutes:
     Type: Number
     MinValue: 1
-    Default: 1
+    Default: 5
     Description: Frequency in minutes to poll for active listing changes.
   RequestsPerSecond:
     Type: Number
