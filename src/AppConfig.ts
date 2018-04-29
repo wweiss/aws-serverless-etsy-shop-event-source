@@ -1,5 +1,11 @@
 import { KMS } from 'aws-sdk';
+
+import { Observer } from 'rxjs/Observer';
+import { Observable } from 'rxjs/Observable';
+import { of } from 'rxjs/observable/of';
+
 import { Logger } from './Logger';
+import { flatMap, defaultIfEmpty, map } from 'rxjs/operators';
 
 export class AppConfig {
   private _apiKey: string;
@@ -19,35 +25,39 @@ export class AppConfig {
     'POLLING_CHECKPOINT_TABLE_NAME'
   ];
 
-  get apiKey(): string {
+  get apiKey(): Observable<string> {
+    let rval: Observable<string>;
     if (!this._apiKey) {
+      this._apiKey = process.env['PLAINTEXT_API_KEY'];
       const encryptedApiKey = process.env['ENCRYPTED_API_KEY'];
       if (encryptedApiKey) {
-        this.decryptApiKey(encryptedApiKey);
-      }
-      if (this._apiKey) {
-        Logger.info('Found and decrypted API Key.');
+        rval = this.decryptApiKey(encryptedApiKey);
       } else {
-        Logger.warn(
-          'Encrypted API Key not found or could not be decrypted, trying plaintext.'
-        );
-        this._apiKey = process.env['PLAINTEXT_API_KEY'];
+        Logger.warn('Encrypted API Key not found, using plaintext.');
+        rval = of(this._apiKey);
       }
+    } else {
+      rval = of(this._apiKey);
     }
-    return this._apiKey;
+    return rval;
   }
 
-  private async decryptApiKey(encryptedApiKey: string) {
+  private decryptApiKey(encryptedApiKey: string): Observable<string> {
     const kms = new KMS();
     const params = {
       CiphertextBlob: new Buffer(encryptedApiKey, 'base64')
     };
-    await kms.decrypt(params, (err, data) => {
-      if (err) {
-        Logger.error('Error decrypting API Key: ', err);
-      } else {
-        this._apiKey = data.Plaintext.toString();
-      }
+    return Observable.create((observer: Observer<string>) => {
+      kms.decrypt(params, (err, data) => {
+        if (err) {
+          Logger.error('Error decrypting API Key: ', err.message);
+        } else {
+          Logger.info('Found and decrypted API Key.');
+          this._apiKey = data.Plaintext.toString();
+        }
+        observer.next(this._apiKey);
+        observer.complete();
+      });
     });
   }
 }

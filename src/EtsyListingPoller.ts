@@ -91,15 +91,17 @@ export class EstyListingPoller {
     const baseUrl = `${this.URL_BASE}${url}`;
     return Observable.create((observer: Observer<any[]>) => {
       this.limiter.removeTokens(1, () => {
-        Logger.debug('Calling api url: ', baseUrl);
-        got(`${baseUrl}?api_key=${this.config.apiKey}`, {
-          json: true
-        })
-          .then(resp => {
-            observer.next(resp.body.results);
-            observer.complete();
+        this.config.apiKey.subscribe(apiKey => {
+          Logger.debug('Calling api url: ', baseUrl);
+          got(`${baseUrl}?api_key=${apiKey}`, {
+            json: true
           })
-          .catch(err => observer.error(err));
+            .then(resp => {
+              observer.next(resp.body.results);
+              observer.complete();
+            })
+            .catch(err => observer.error(err));
+        });
       });
     });
   }
