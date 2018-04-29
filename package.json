@@ -11,10 +11,10 @@
     "clean": "rimraf \"dist/**\" \"lambda-dist/**\"",
     "test": "tape -r ts-node/register src/**/*.spec.ts",
     "package":
-      "gulp package && aws cloudformation package --template-file ./app.template.yml --output-template-file ./packaged-template.yml --s3-bucket ",
+      "gulp package && aws cloudformation package --template-file ./app.template.yml --output-template-file ./.aws_config/packaged-template.yml --s3-bucket file://.aws_config/s3Bucket",
     "build": "yarn clean && yarn test && yarn package ",
     "deploy":
-      "aws cloudformation deploy --template-file ./packaged-template.yml --stack-name "
+      "aws cloudformation deploy --template-file ./.aws_config/packaged-template.yml --stack-name file://.aws_config/stackName --capabilities CAPABILITY_IAM"
   },
   "dependencies": {
     "got": "^8.3.0",
