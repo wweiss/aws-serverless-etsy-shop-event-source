@@ -34,7 +34,7 @@ Parameters:
   RequestsPerSecond:
     Type: Number
     MinValue: 1
-    Default: 6
+    Default: 5
     Description: Max number of requests that can be made to the api per second.  This should not be changed unless an exception has been requested from Etsy.
 
 Conditions:

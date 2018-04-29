@@ -1,4 +1,5 @@
 import { KMS } from 'aws-sdk';
+import { Logger } from './Logger';
 
 export class AppConfig {
   private _apiKey: string;
@@ -21,10 +22,16 @@ export class AppConfig {
   get apiKey(): string {
     if (!this._apiKey) {
       const encryptedApiKey = process.env['ENCRYPTED_API_KEY'];
-      if (!encryptedApiKey || encryptedApiKey.trim.length < 1) {
-        this._apiKey = process.env['PLAINTEXT_API_KEY'];
-      } else {
+      if (encryptedApiKey) {
         this.decryptApiKey(encryptedApiKey);
+      }
+      if (this._apiKey) {
+        Logger.info('Found and decrypted API Key.');
+      } else {
+        Logger.warn(
+          'Encrypted API Key not found or could not be decrypted, trying plaintext.'
+        );
+        this._apiKey = process.env['PLAINTEXT_API_KEY'];
       }
     }
     return this._apiKey;
@@ -37,6 +44,7 @@ export class AppConfig {
     };
     await kms.decrypt(params, (err, data) => {
       if (err) {
+        Logger.error('Error decrypting API Key: ', err);
       } else {
         this._apiKey = data.Plaintext.toString();
       }
