@@ -52,7 +52,7 @@ Resources:
       Timeout: 60
       Policies:
         - LambdaInvokePolicy:
-            FunctionName: !Ref EstyShopListingPollerFunctionName
+            FunctionName: !Ref ListingProcessorFunctionName
         - DynamoDBCrudPolicy:
             TableName: !Ref PollingCheckpoint
         - KMSDecryptPolicy:
