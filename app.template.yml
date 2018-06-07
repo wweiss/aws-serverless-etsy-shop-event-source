@@ -35,7 +35,7 @@ Parameters:
     Type: Number
     MinValue: 1
     Default: 30
-    Description: Maximum time to spend on a single polling session.
+    Description: Maximum time in seconds to spend on a single polling session.
   PerRequestTimeout:
     Type: Number
     MinValue: 1
