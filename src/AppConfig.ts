@@ -1,29 +1,23 @@
 import { KMS } from 'aws-sdk';
-
-import { Observer } from 'rxjs/Observer';
 import { Observable } from 'rxjs/Observable';
 import { of } from 'rxjs/observable/of';
+import { Observer } from 'rxjs/Observer';
 
 import { Logger } from './Logger';
-import { flatMap, defaultIfEmpty, map } from 'rxjs/operators';
 
 export class AppConfig {
   private _apiKey: string;
 
   public readonly shopId: string = process.env['SHOP_ID'];
-  public readonly includeImages: boolean = process.env['INCLUDE_IMAGES'] ===
-  'true'
-    ? true
-    : false;
+  public readonly includeImages: boolean =
+    process.env['INCLUDE_IMAGES'] === 'true' ? true : false;
   public readonly requestsPerSecond: number = +process.env[
     'REQUESTS_PER_SECOND'
   ];
-  public readonly listingProcessorFunctionName: string = process.env[
-    'LISTING_PROCESSOR_FUNCTION_NAME'
-  ];
-  public readonly tableName: string = process.env[
-    'POLLING_CHECKPOINT_TABLE_NAME'
-  ];
+  public readonly listingProcessorFunctionName: string =
+    process.env['LISTING_PROCESSOR_FUNCTION_NAME'];
+  public readonly tableName: string =
+    process.env['POLLING_CHECKPOINT_TABLE_NAME'];
 
   get apiKey(): Observable<string> {
     let rval: Observable<string>;

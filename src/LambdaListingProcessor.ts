@@ -1,8 +1,8 @@
-import {Lambda} from 'aws-sdk';
-import {InvocationRequest} from 'aws-sdk/clients/lambda';
+import { Lambda } from 'aws-sdk';
+import { InvocationRequest } from 'aws-sdk/clients/lambda';
 
-import {Logger} from './Logger';
-import {EtsyListing, ListingProcessor} from '.';
+import { EtsyListing, ListingProcessor } from './';
+import { Logger } from './Logger';
 
 export class LambdaListingProcessor implements ListingProcessor {
   private lambdaFunctionName : string;

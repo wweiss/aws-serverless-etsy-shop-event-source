@@ -1,12 +1,11 @@
-import * as test from 'tape';
 import * as dotenv from 'dotenv';
-
-import { of } from 'rxjs/observable/of';
 import { Observable } from 'rxjs/Observable';
+import { of } from 'rxjs/observable/of';
+import * as test from 'tape';
 
-import { PollingCheckpoint, ListingProcessor, EtsyListing } from '.';
-import { EstyListingPoller } from './EtsyListingPoller';
+import { EtsyListing, ListingProcessor, PollingCheckpoint } from './';
 import { AppConfig } from './AppConfig';
+import { EstyListingPoller } from './EtsyListingPoller';
 
 dotenv.config();
 

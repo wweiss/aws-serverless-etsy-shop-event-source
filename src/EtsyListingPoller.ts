@@ -1,21 +1,15 @@
-import { of } from 'rxjs/observable/of';
-import { forkJoin } from 'rxjs/observable/forkJoin';
-import { EmptyObservable } from 'rxjs/observable/EmptyObservable';
-import { map, flatMap, retry, catchError } from 'rxjs/operators';
-import { Observer } from 'rxjs/Observer';
-import { Observable } from 'rxjs/Observable';
-
 import * as got from 'got';
-import * as md5 from 'md5';
 import { RateLimiter } from 'limiter';
+import * as md5 from 'md5';
+import { Observable } from 'rxjs/Observable';
+import { EmptyObservable } from 'rxjs/observable/EmptyObservable';
+import { forkJoin } from 'rxjs/observable/forkJoin';
+import { of } from 'rxjs/observable/of';
+import { Observer } from 'rxjs/Observer';
+import { flatMap, map, retry } from 'rxjs/operators';
 
+import { EtsyListing, ListingImage, ListingProcessor, PollingCheckpoint } from './';
 import { AppConfig } from './AppConfig';
-import {
-  PollingCheckpoint,
-  EtsyListing,
-  ListingImage,
-  ListingProcessor
-} from '.';
 import { Logger } from './Logger';
 
 export class EstyListingPoller {

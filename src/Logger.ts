@@ -1,5 +1,5 @@
-import * as winston from 'winston';
 import * as util from 'util';
+import * as winston from 'winston';
 
 export class Logger {
   private static readonly LOGGER = Logger.createLogger();
