@@ -1,8 +1,7 @@
 {
   "name": "aws-serverless-etsy-shop-event-source",
-  "version": "1.0.0",
-  "description":
-    "A serverless app that periodically polls the public Etsy API and invokes a given lambda function to process changes to the active listings for a specific shop.",
+  "version": "1.1.0",
+  "description": "A serverless app that periodically polls the public Etsy API and invokes a given lambda function to process changes to the active listings for a specific shop.",
   "main": "index.js",
   "author": "William Weiss <william@codification.org>",
   "license": "MIT",
@@ -10,11 +9,9 @@
   "scripts": {
     "clean": "rimraf \"dist/**\" \"lambda-dist/**\"",
     "test": "tape -r ts-node/register src/**/*.spec.ts",
-    "package":
-      "gulp package && aws cloudformation package --template-file ./app.template.yml --output-template-file ./.aws_config/packaged-template.yml --s3-bucket file://.aws_config/s3Bucket",
+    "package": "gulp package && aws cloudformation package --template-file ./app.template.yml --output-template-file ./.aws_config/packaged-template.yml --s3-bucket file://.aws_config/s3Bucket",
     "build": "yarn clean && yarn test && yarn package ",
-    "deploy":
-      "aws cloudformation deploy --template-file ./.aws_config/packaged-template.yml --stack-name file://.aws_config/stackName --capabilities CAPABILITY_IAM"
+    "deploy": "aws cloudformation deploy --template-file ./.aws_config/packaged-template.yml --stack-name file://.aws_config/stackName --capabilities CAPABILITY_IAM"
   },
   "dependencies": {
     "got": "^8.3.0",
