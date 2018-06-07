@@ -9,6 +9,9 @@ export class AppConfig {
   private _apiKey: string;
 
   public readonly shopId: string = process.env['SHOP_ID'];
+  public readonly perRequestTimeout: number = +process.env[
+    'PER_REQUEST_TIMEOUT'
+  ];
   public readonly includeImages: boolean =
     process.env['INCLUDE_IMAGES'] === 'true' ? true : false;
   public readonly requestsPerSecond: number = +process.env[

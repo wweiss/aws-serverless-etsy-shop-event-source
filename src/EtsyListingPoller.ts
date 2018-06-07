@@ -8,7 +8,12 @@ import { of } from 'rxjs/observable/of';
 import { Observer } from 'rxjs/Observer';
 import { flatMap, map, retry } from 'rxjs/operators';
 
-import { EtsyListing, ListingImage, ListingProcessor, PollingCheckpoint } from './';
+import {
+  EtsyListing,
+  ListingImage,
+  ListingProcessor,
+  PollingCheckpoint
+} from './';
 import { AppConfig } from './AppConfig';
 import { Logger } from './Logger';
 
@@ -88,7 +93,8 @@ export class EstyListingPoller {
         this.config.apiKey.subscribe(apiKey => {
           Logger.debug('Calling api url: ', baseUrl);
           got(`${baseUrl}?api_key=${apiKey}`, {
-            json: true
+            json: true,
+            timeout: this.config.perRequestTimeout
           })
             .then(resp => {
               observer.next(resp.body.results);

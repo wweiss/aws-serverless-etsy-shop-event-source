@@ -31,6 +31,16 @@ Parameters:
     MinValue: 1
     Default: 5
     Description: Frequency in minutes to poll for active listing changes.
+  PollTimeout:
+    Type: Number
+    MinValue: 1
+    Default: 30
+    Description: Maximum time to spend on a single polling session.
+  PerRequestTimeout:
+    Type: Number
+    MinValue: 1
+    Default: 1500
+    Description: Milliseconds before any given request to the Etsy API will timeout and give up.
   RequestsPerSecond:
     Type: Number
     MinValue: 1
@@ -49,7 +59,7 @@ Resources:
       Handler: lambda/EstyShopListingPollerHandler.handler
       Tracing: Active
       MemorySize: 512
-      Timeout: 60
+      Timeout: !Ref PollTimeout
       Policies:
         - LambdaInvokePolicy:
             FunctionName: !Ref ListingProcessorFunctionName
@@ -63,6 +73,7 @@ Resources:
           PLAINTEXT_API_KEY: !Ref PlainTextApiKey
           SHOP_ID: !Ref ShopId
           INCLUDE_IMAGES: !Ref IncludeImages
+          PER_REQUEST_TIMEOUT: !Ref PerRequestTimeout
           REQUESTS_PER_SECOND: !Ref RequestsPerSecond
           POLLING_CHECKPOINT_TABLE_NAME: !Ref PollingCheckpoint
           LISTING_PROCESSOR_FUNCTION_NAME: !Ref ListingProcessorFunctionName
