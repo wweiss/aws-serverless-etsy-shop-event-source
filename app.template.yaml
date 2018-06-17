@@ -55,7 +55,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Runtime: nodejs8.10
-      CodeUri: ./lambda-dist
+      CodeUri: ./dist
       Handler: lambda/EstyShopListingPollerHandler.handler
       Tracing: Active
       MemorySize: 512
