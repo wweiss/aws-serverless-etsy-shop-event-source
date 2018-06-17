@@ -8,12 +8,7 @@ import { of } from 'rxjs/observable/of';
 import { Observer } from 'rxjs/Observer';
 import { flatMap, map, retry } from 'rxjs/operators';
 
-import {
-  EtsyListing,
-  ListingImage,
-  ListingProcessor,
-  PollingCheckpoint
-} from './';
+import { EtsyListing, ListingImage, ListingProcessor, PollingCheckpoint } from './';
 import { AppConfig } from './AppConfig';
 import { Logger } from './Logger';
 
@@ -51,7 +46,6 @@ export class EstyListingPoller {
       this.checkpoint.getLastHash()
     ).pipe(
       flatMap(results => {
-        let rval: Observable<EtsyListing[]>;
         const sortedListings = this.sortEtsyListings(results[0]);
         Logger.info('Recieved listings: ', sortedListings.length);
         const lastHash = results[1];
@@ -61,18 +55,16 @@ export class EstyListingPoller {
 
         if (currentHash === lastHash) {
           Logger.info('Exiting, no changes detected.');
-          rval = new EmptyObservable();
+          return new EmptyObservable();
         } else {
           Logger.info(
             'Updating checkpointhash , fetching images if requested, and triggering event.'
           );
           this.checkpoint.updateHash(currentHash);
-          rval = this.config.includeImages
+          return this.config.includeImages
             ? forkJoin(sortedListings.map(listing => this.getImages(listing)))
             : of(sortedListings);
         }
-
-        return rval;
       })
     );
   }
@@ -114,6 +106,8 @@ export class EstyListingPoller {
       description: listing.description,
       price: listing.price,
       url: listing.url,
+      creationDate: listing.creation_tsz,
+      modifiedDate: listing.last_modified_tsz,
       categoryPath: listing.category_path,
       hash: this.toListingHash(listing),
       images: []

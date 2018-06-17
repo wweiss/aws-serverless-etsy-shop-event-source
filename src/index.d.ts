@@ -16,6 +16,8 @@ export interface EtsyListing {
   description: string;
   price: string;
   url: string;
+  creationDate: number;
+  modifiedDate: number;
   categoryPath: string[];
   hash: string;
   images: ListingImage[];
