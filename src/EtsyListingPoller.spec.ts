@@ -27,7 +27,7 @@ test('EtsyListingPoller Unit Tests', t => {
     poller
       .doPoll()
       .subscribe(
-        listings => t.fail('no listings should return without changes'),
+        () => t.fail('no listings should return without changes'),
         null,
         () => {
           t.equal(

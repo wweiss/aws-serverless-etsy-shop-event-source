@@ -3,7 +3,6 @@ import { DynamoDBPollingCheckpoint } from '../DynamoDBPollingCheckpoint';
 import { EstyListingPoller } from '../EtsyListingPoller';
 import { LambdaListingProcessor } from '../LambdaListingProcessor';
 
-
 const config = new AppConfig();
 const checkpoint = new DynamoDBPollingCheckpoint(config.tableName);
 const processor = new LambdaListingProcessor(
