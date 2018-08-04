@@ -20,11 +20,7 @@ export class EstyListingPoller {
   private processor: ListingProcessor;
   private checkpoint: PollingCheckpoint;
 
-  constructor(
-    config: AppConfig,
-    checkpoint: PollingCheckpoint,
-    processor: ListingProcessor
-  ) {
+  constructor(config: AppConfig, checkpoint: PollingCheckpoint, processor: ListingProcessor) {
     this.config = config;
     this.processor = processor;
     this.checkpoint = checkpoint;
@@ -36,15 +32,12 @@ export class EstyListingPoller {
       pollResults => {
         this.processor.process(pollResults);
       },
-      err => Logger.error('Polling encountered an error: ', err)
+      err => Logger.error('Polling encountered an error: ', err),
     );
   }
 
-  doPoll(): Observable<EtsyListing[]> {
-    return forkJoin(
-      this.getActiveListings(),
-      this.checkpoint.getLastHash()
-    ).pipe(
+  private doPoll(): Observable<EtsyListing[]> {
+    return forkJoin(this.getActiveListings(), this.checkpoint.getLastHash()).pipe(
       flatMap(results => {
         const sortedListings = this.sortEtsyListings(results[0]);
         Logger.info('Recieved listings: ', sortedListings.length);
@@ -57,15 +50,13 @@ export class EstyListingPoller {
           Logger.info('Exiting, no changes detected.');
           return new EmptyObservable();
         } else {
-          Logger.info(
-            'Updating checkpointhash , fetching images if requested, and triggering event.'
-          );
+          Logger.info('Updating checkpointhash , fetching images if requested, and triggering event.');
           this.checkpoint.updateHash(currentHash);
           return this.config.includeImages
             ? forkJoin(sortedListings.map(listing => this.getImages(listing)))
             : of(sortedListings);
         }
-      })
+      }),
     );
   }
 
@@ -74,7 +65,7 @@ export class EstyListingPoller {
       map((result: any[]) => {
         return result.map(listing => this.toEtsyListing(listing));
       }),
-      retry(3)
+      retry(3),
     );
   }
 
@@ -86,7 +77,7 @@ export class EstyListingPoller {
           Logger.debug('Calling api url: ', baseUrl);
           got(`${baseUrl}?api_key=${apiKey}`, {
             json: true,
-            timeout: this.config.perRequestTimeout
+            timeout: this.config.perRequestTimeout,
           })
             .then(resp => {
               observer.next(resp.body.results);
@@ -100,31 +91,25 @@ export class EstyListingPoller {
 
   private toEtsyListing(listing: any): EtsyListing {
     return {
-      listingId: listing.listing_id,
-      userId: listing.user_id,
-      title: listing.title,
-      description: listing.description,
-      price: listing.price,
-      url: listing.url,
-      creationDate: listing.creation_tsz,
-      modifiedDate: listing.last_modified_tsz,
       categoryPath: listing.category_path,
+      creationDate: listing.creation_tsz,
+      description: listing.description,
       hash: this.toListingHash(listing),
-      images: []
+      images: [],
+      listingId: listing.listing_id,
+      modifiedDate: listing.last_modified_tsz,
+      price: listing.price,
+      title: listing.title,
+      url: listing.url,
+      userId: listing.user_id,
     };
   }
 
   private toListingHash(listing: any): string {
     return md5(
-      [
-        'listing_id',
-        'creation_tsz',
-        'ending_tsz',
-        'original_creation_tsz',
-        'last_modified_tsz'
-      ]
+      ['listing_id', 'creation_tsz', 'ending_tsz', 'original_creation_tsz', 'last_modified_tsz']
         .map(prop => listing[prop].toString())
-        .join('')
+        .join(''),
     );
   }
 
@@ -140,13 +125,10 @@ export class EstyListingPoller {
     return this.callAPI(`/listings/${listing.listingId}/images`).pipe(
       map((result: any[]) => {
         listing.images = this.toListingImages(result);
-        Logger.debug(
-          `Fetched images for listing[${listing.listingId}]: `,
-          listing.images
-        );
+        Logger.debug(`Fetched images for listing[${listing.listingId}]: `, listing.images);
         return listing;
       }),
-      retry(3)
+      retry(3),
     );
   }
 
@@ -157,16 +139,16 @@ export class EstyListingPoller {
   private toListingImage(image: any): ListingImage {
     return {
       imageId: image.listing_image_id,
-      urls: {
-        small: image.url_75x75,
-        medium: image.url_170x135,
-        large: image.url_570xN,
-        full: image.url_fullxfull
-      },
       size: {
         height: image.full_height,
-        width: image.full_width
-      }
+        width: image.full_width,
+      },
+      urls: {
+        full: image.url_fullxfull,
+        large: image.url_570xN,
+        medium: image.url_170x135,
+        small: image.url_75x75,
+      },
     };
   }
 }

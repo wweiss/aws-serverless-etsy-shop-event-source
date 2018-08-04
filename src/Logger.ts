@@ -2,20 +2,6 @@ import * as util from 'util';
 import * as winston from 'winston';
 
 export class Logger {
-  private static readonly FORMAT = winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.align(),
-    winston.format.printf(
-      info => `${info.timestamp} [${info.level}]: ${info.message}`
-    )
-  );
-
-  private static readonly LOGGER = winston.createLogger({
-    level: 'debug',
-    format: Logger.FORMAT,
-    transports: [new winston.transports.Console()]
-  });
-
   public static error(...input: any[]): void {
     Logger.LOGGER.error(util.format.apply(null, input));
   }
@@ -39,4 +25,16 @@ export class Logger {
   public static silly(...input: any[]): void {
     Logger.LOGGER.silly(util.format.apply(null, input));
   }
+
+  private static readonly FORMAT = winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.align(),
+    winston.format.printf(info => `${info.timestamp} [${info.level}]: ${info.message}`),
+  );
+
+  private static readonly LOGGER = winston.createLogger({
+    format: Logger.FORMAT,
+    level: 'debug',
+    transports: [new winston.transports.Console()],
+  });
 }

@@ -5,6 +5,8 @@ import { Observer } from 'rxjs/Observer';
 import { PollingCheckpoint } from './';
 import { Logger } from './Logger';
 
+const CHECKPOINT_ATTRIBUTE = 'checkpoint';
+
 export class DynamoDBPollingCheckpoint implements PollingCheckpoint {
   private readonly hashKey = 'CHECKPOINT_HASH';
 
@@ -19,17 +21,17 @@ export class DynamoDBPollingCheckpoint implements PollingCheckpoint {
     const params = {
       Key: {
         id: {
-          S: this.hashKey
-        }
+          S: this.hashKey,
+        },
       },
-      TableName: this.tableName
+      TableName: this.tableName,
     };
     return Observable.create((observer: Observer<string>) => {
       this.db.getItem(params, (err, data) => {
         if (err) {
           observer.error(err);
         } else if (data.Item) {
-          observer.next(data.Item['checkpoint'].S);
+          observer.next(data.Item[CHECKPOINT_ATTRIBUTE].S);
         } else {
           observer.next('');
         }
@@ -41,14 +43,14 @@ export class DynamoDBPollingCheckpoint implements PollingCheckpoint {
   public updateHash(latestHash: string): void {
     const params = {
       Item: {
-        id: {
-          S: this.hashKey
-        },
         checkpoint: {
-          S: latestHash
-        }
+          S: latestHash,
+        },
+        id: {
+          S: this.hashKey,
+        },
       },
-      TableName: this.tableName
+      TableName: this.tableName,
     };
     this.db.putItem(params, (err, data) => {
       if (err) {

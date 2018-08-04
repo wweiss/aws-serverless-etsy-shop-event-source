@@ -5,36 +5,40 @@ import { Observer } from 'rxjs/Observer';
 
 import { Logger } from './Logger';
 
+export enum EnvVar {
+  shopId = 'SHOP_ID',
+  perRequestTimeout = 'PER_REQUEST_TIMEOUT',
+  includeImages = 'INCLUDE_IMAGES',
+  requestsPerSecond = 'REQUESTS_PER_SECOND',
+  listingProcessor = 'LISTING_PROCESSOR_FUNCTION_NAME',
+  pollingCheckpointTable = 'POLLING_CHECKPOINT_TABLE_NAME',
+  plainTextApiKey = 'PLAINTEXT_API_KEY',
+  encryptedApiKey = 'ENCRYPTED_API_KEY',
+}
+
 export class AppConfig {
-  private _apiKey: string;
+  public readonly shopId: string = process.env[EnvVar.shopId];
+  public readonly perRequestTimeout: number = +process.env[EnvVar.perRequestTimeout];
+  public readonly includeImages: boolean = process.env[EnvVar.includeImages] === 'true' ? true : false;
+  public readonly requestsPerSecond: number = +process.env[EnvVar.requestsPerSecond];
+  public readonly listingProcessorFunctionName: string = process.env[EnvVar.listingProcessor];
+  public readonly tableName: string = process.env[EnvVar.pollingCheckpointTable];
 
-  public readonly shopId: string = process.env['SHOP_ID'];
-  public readonly perRequestTimeout: number = +process.env[
-    'PER_REQUEST_TIMEOUT'
-  ];
-  public readonly includeImages: boolean =
-    process.env['INCLUDE_IMAGES'] === 'true' ? true : false;
-  public readonly requestsPerSecond: number = +process.env[
-    'REQUESTS_PER_SECOND'
-  ];
-  public readonly listingProcessorFunctionName: string =
-    process.env['LISTING_PROCESSOR_FUNCTION_NAME'];
-  public readonly tableName: string =
-    process.env['POLLING_CHECKPOINT_TABLE_NAME'];
+  private cachedApiKey: string;
 
-  get apiKey(): Observable<string> {
+  public get apiKey(): Observable<string> {
     let rval: Observable<string>;
-    if (!this._apiKey) {
-      this._apiKey = process.env['PLAINTEXT_API_KEY'];
-      const encryptedApiKey = process.env['ENCRYPTED_API_KEY'];
+    if (!this.cachedApiKey) {
+      this.cachedApiKey = process.env[EnvVar.plainTextApiKey];
+      const encryptedApiKey = process.env[EnvVar.encryptedApiKey];
       if (encryptedApiKey) {
         rval = this.decryptApiKey(encryptedApiKey);
       } else {
         Logger.warn('Encrypted API Key not found, using plaintext.');
-        rval = of(this._apiKey);
+        rval = of(this.cachedApiKey);
       }
     } else {
-      rval = of(this._apiKey);
+      rval = of(this.cachedApiKey);
     }
     return rval;
   }
@@ -42,7 +46,7 @@ export class AppConfig {
   private decryptApiKey(encryptedApiKey: string): Observable<string> {
     const kms = new KMS();
     const params = {
-      CiphertextBlob: new Buffer(encryptedApiKey, 'base64')
+      CiphertextBlob: new Buffer(encryptedApiKey, 'base64'),
     };
     return Observable.create((observer: Observer<string>) => {
       kms.decrypt(params, (err, data) => {
@@ -50,9 +54,9 @@ export class AppConfig {
           Logger.error('Error decrypting API Key: ', err.message);
         } else {
           Logger.info('Found and decrypted API Key.');
-          this._apiKey = data.Plaintext.toString();
+          this.cachedApiKey = data.Plaintext.toString();
         }
-        observer.next(this._apiKey);
+        observer.next(this.cachedApiKey);
         observer.complete();
       });
     });

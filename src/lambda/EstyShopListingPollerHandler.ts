@@ -5,15 +5,9 @@ import { LambdaListingProcessor } from '../LambdaListingProcessor';
 
 const config = new AppConfig();
 const checkpoint = new DynamoDBPollingCheckpoint(config.tableName);
-const processor = new LambdaListingProcessor(
-  config.listingProcessorFunctionName
-);
+const processor = new LambdaListingProcessor(config.listingProcessorFunctionName);
 
-const poller: EstyListingPoller = new EstyListingPoller(
-  config,
-  checkpoint,
-  processor
-);
+const poller: EstyListingPoller = new EstyListingPoller(config, checkpoint, processor);
 
 exports.handler = () => {
   poller.poll();
