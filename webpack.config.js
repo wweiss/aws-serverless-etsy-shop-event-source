@@ -6,8 +6,6 @@ const OUT_DIR = path.resolve(__dirname, 'dist');
 
 const LAMBDA_DIR = path.resolve(SRC_DIR, 'lambda');
 
-console.log(LAMBDA_DIR);
-
 module.exports = (env, argv) => ({
     entry: {
         etsyShopPoller: path.resolve(LAMBDA_DIR, 'EstyShopListingPollerHandler.ts'),
