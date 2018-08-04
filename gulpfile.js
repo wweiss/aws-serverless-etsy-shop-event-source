@@ -33,7 +33,7 @@ const configureTemp = () => {
 exports.configureTemp = configureTemp;
 
 const bundleLambda = () => {
-  return run('webpack --mode=production --display-error-details')();
+  return run('webpack --mode=production')();
 }
 exports.bundleLambda = bundleLambda;
 
