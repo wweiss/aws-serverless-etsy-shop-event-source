@@ -2,13 +2,14 @@ require('dotenv').config();
 
 const gulp = require('gulp');
 const del = require('del');
-const install = require('gulp-yarn');
-const ts = require('gulp-typescript');
 const run = require('gulp-run-command').default;
 
 const vars = {
   stackName: process.env.STACK_NAME,
   artifactBucket: process.env.ARTIFACT_BUCKET,
+  shopId: process.env.SHOP_ID,
+  listingProcessor: process.env.LISTING_PROCESSOR_FUNCTION_NAME,
+  apiKey: process.env.PLAINTEXT_API_KEY
 };
 
 const paths = {
@@ -16,8 +17,6 @@ const paths = {
   dist: 'dist',
   tmp: 'tmp'
 };
-
-const tsProject = ts.createProject('tsconfig.json');
 
 const clean = () => {
   return del([paths.dist, paths.tmp]);
@@ -33,24 +32,10 @@ const configureTemp = () => {
 }
 exports.configureTemp = configureTemp;
 
-const transpileLambda = () => {
-  const tsResult = tsProject.src().pipe(tsProject());
-  return tsResult.js.pipe(gulp.dest(paths.dist));
+const bundleLambda = () => {
+  return run('webpack --mode=production --display-error-details')();
 }
-exports.transpileLambda = transpileLambda;
-
-const packageLambda = () => {
-  return gulp.src(['./package.json', './yarn.lock'])
-    .pipe(gulp.dest(paths.dist))
-    .pipe(
-      install({
-        production: true
-      })
-    ).on('end', () => {
-      del([`${paths.dist}/package.json`, `${paths.dist}/*.lock`]);
-    });
-}
-exports.packageLambda = packageLambda;
+exports.bundleLambda = bundleLambda;
 
 const packageCloudFormation = () => {
   return run(`aws cloudformation package \
@@ -60,13 +45,17 @@ const packageCloudFormation = () => {
 }
 exports.packageCloudFormation = packageCloudFormation;
 
-const package = gulp.series(clean, gulp.parallel(packageLambda, transpileLambda, configureTemp), packageCloudFormation);
+const package = gulp.series(clean, gulp.parallel(bundleLambda, configureTemp), packageCloudFormation);
 exports.package = package;
 
 const deployCloudformation = () => {
   return run(`aws cloudformation deploy \
 --template-file ${paths.tmp}/packaged-sam.yaml \
 --stack-name ${vars.stackName} \
+--parameter-overrides \
+PlainTextApiKey=${vars.apiKey} \
+ListingProcessorFunctionName=${vars.listingProcessor} \
+ShopId=${vars.shopId} \
 --capabilities CAPABILITY_IAM \
 --no-fail-on-empty-changeset`)();
 }

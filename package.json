@@ -1,6 +1,6 @@
 {
   "name": "aws-serverless-etsy-shop-event-source",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "A serverless app that periodically polls the public Etsy API and invokes a given lambda function to process changes to the active listings for a specific shop.",
   "main": "index.js",
   "author": "William Weiss <william@codification.org>",
@@ -10,6 +10,9 @@
     "clean": "gulp clean",
     "test": "tape -r ts-node/register src/**/*.spec.ts",
     "package": "gulp package",
+    "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
+    "lint": "tslint -p tsconfig.json",
+    "precommit": "yarn format && yarn lint",
     "build": "yarn clean && yarn test && yarn package ",
     "deploy": "gulp deploy"
   },
@@ -34,11 +37,14 @@
     "gulp": "^4.0.0",
     "gulp-install": "^1.1.0",
     "gulp-run-command": "^0.0.9",
-    "gulp-typescript": "^4.0.2",
-    "gulp-yarn": "^2.0.0",
+    "prettier": "^1.14.0",
     "tape": "^4.9.0",
+    "ts-loader": "^4.4.2",
     "ts-node": "^6.0.0",
     "tslint": "^5.9.1",
-    "typescript": "^2.8.3"
+    "tslint-config-prettier": "^1.14.0",
+    "typescript": "^2.8.3",
+    "webpack": "^4.16.4",
+    "webpack-cli": "^3.1.0"
   }
 }

@@ -55,8 +55,8 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Runtime: nodejs8.10
-      CodeUri: ./dist
-      Handler: lambda/EstyShopListingPollerHandler.handler
+      CodeUri: ./dist/etsyShopPoller.js
+      Handler: etsyShopPoller.handler
       Tracing: Active
       MemorySize: 512
       Timeout: !Ref PollTimeout

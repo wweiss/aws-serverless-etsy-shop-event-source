@@ -13,12 +13,12 @@ test('EtsyListingPoller Unit Tests', t => {
   t.plan(4);
 
   const checkpoint = new MockPollingCheckpoint();
-  const processor = new MockListingProcessor();
+  const processor = new MockListingProcessor(t);
   const poller = new EstyListingPoller(new AppConfig(), checkpoint, processor);
 
   poller.doPoll().subscribe(listings => {
-    console.log('Listings: ', listings);
-    console.log('Checkpoint Hash: ', checkpoint.lastHash);
+    t.comment('Listings: ' + JSON.stringify(listings));
+    t.comment('Checkpoint Hash: ' + checkpoint.lastHash);
     t.ok(listings && listings.length > 0, 'can get active listings');
     t.ok(listings[0].images.length > 0, 'can fetch image urls');
     t.ok(checkpoint.lastHash.length > 0, 'properly sets the checkpoint hash');
@@ -31,7 +31,7 @@ test('EtsyListingPoller Unit Tests', t => {
 });
 
 class MockPollingCheckpoint implements PollingCheckpoint {
-  lastHash = '';
+  public lastHash = '';
 
   constructor(lastHash?: string) {
     if (lastHash) {
@@ -39,17 +39,23 @@ class MockPollingCheckpoint implements PollingCheckpoint {
     }
   }
 
-  getLastHash(): Observable<string> {
+  public getLastHash(): Observable<string> {
     return of(this.lastHash);
   }
 
-  updateHash(currentHash: string): void {
+  public updateHash(currentHash: string): void {
     this.lastHash = currentHash;
   }
 }
 
 class MockListingProcessor implements ListingProcessor {
-  process(listings: EtsyListing[]): void {
-    console.log('Recieved listings: ', listings);
+  private t: test.Test;
+
+  constructor(t: test.Test) {
+    this.t = t;
+  }
+
+  public process(listings: EtsyListing[]): void {
+    this.t.comment('Recieved listings: ' + JSON.stringify(listings));
   }
 }

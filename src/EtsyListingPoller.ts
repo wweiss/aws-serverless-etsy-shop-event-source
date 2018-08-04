@@ -36,7 +36,7 @@ export class EstyListingPoller {
     );
   }
 
-  private doPoll(): Observable<EtsyListing[]> {
+  public doPoll(): Observable<EtsyListing[]> {
     return forkJoin(this.getActiveListings(), this.checkpoint.getLastHash()).pipe(
       flatMap(results => {
         const sortedListings = this.sortEtsyListings(results[0]);
