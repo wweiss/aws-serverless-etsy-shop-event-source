@@ -3,3 +3,4 @@ dist
 lambda-dist
 .env
 tmp
+*.log
