@@ -7,7 +7,7 @@ import { EtsyListing, ListingProcessor, PollingCheckpoint } from './';
 import { AppConfig } from './AppConfig';
 import { EstyListingPoller } from './EtsyListingPoller';
 
-dotenv.config();
+import { Logger } from '@codificationorg/commons-core';
 
 test('EtsyListingPoller Unit Tests', t => {
   t.plan(4);
@@ -17,8 +17,8 @@ test('EtsyListingPoller Unit Tests', t => {
   const poller = new EstyListingPoller(new AppConfig(), checkpoint, processor);
 
   poller.doPoll().subscribe(listings => {
-    t.comment('Listings: ' + JSON.stringify(listings));
-    t.comment('Checkpoint Hash: ' + checkpoint.lastHash);
+    Logger.silly('Listings: ' + JSON.stringify(listings));
+    Logger.debug('Checkpoint Hash: ' + checkpoint.lastHash);
     t.ok(listings && listings.length > 0, 'can get active listings');
     t.ok(listings[0].images.length > 0, 'can fetch image urls');
     t.ok(checkpoint.lastHash.length > 0, 'properly sets the checkpoint hash');
@@ -56,6 +56,6 @@ class MockListingProcessor implements ListingProcessor {
   }
 
   public process(listings: EtsyListing[]): void {
-    this.t.comment('Recieved listings: ' + JSON.stringify(listings));
+    Logger.info('Recieved listings: ' + JSON.stringify(listings));
   }
 }

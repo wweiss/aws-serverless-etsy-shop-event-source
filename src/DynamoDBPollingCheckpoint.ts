@@ -1,9 +1,8 @@
+import { Logger } from '@codificationorg/commons-core';
 import { DynamoDB } from 'aws-sdk';
 import { Observable } from 'rxjs/Observable';
 import { Observer } from 'rxjs/Observer';
-
 import { PollingCheckpoint } from './';
-import { Logger } from './Logger';
 
 const CHECKPOINT_ATTRIBUTE = 'checkpoint';
 

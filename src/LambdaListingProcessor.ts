@@ -1,8 +1,7 @@
+import { Logger } from '@codificationorg/commons-core';
 import { Lambda } from 'aws-sdk';
 import { InvocationRequest } from 'aws-sdk/clients/lambda';
-
 import { EtsyListing, ListingProcessor } from './';
-import { Logger } from './Logger';
 
 export class LambdaListingProcessor implements ListingProcessor {
   private lambdaFunctionName: string;
@@ -18,11 +17,11 @@ export class LambdaListingProcessor implements ListingProcessor {
       InvocationType: 'Event',
       Payload: JSON.stringify(listings),
     };
-    this.lambda.invoke(params, (err, data) => {
+    this.lambda.invoke(params, err => {
       if (err) {
         Logger.error(`Encountered error publishing listings to lambda[${this.lambdaFunctionName}]: `, err);
       } else {
-        Logger.debug(`Successfully published listings to lambda[${this.lambdaFunctionName}]: `, data);
+        Logger.info(`Successfully published ${listings.length} listing(s) to lambda: ${this.lambdaFunctionName}`);
       }
     });
   }

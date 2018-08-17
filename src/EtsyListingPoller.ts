@@ -1,3 +1,4 @@
+import { Logger } from '@codificationorg/commons-core';
 import * as got from 'got';
 import { RateLimiter } from 'limiter';
 import * as md5 from 'md5';
@@ -7,10 +8,8 @@ import { forkJoin } from 'rxjs/observable/forkJoin';
 import { of } from 'rxjs/observable/of';
 import { Observer } from 'rxjs/Observer';
 import { flatMap, map, retry } from 'rxjs/operators';
-
 import { EtsyListing, ListingImage, ListingProcessor, PollingCheckpoint } from './';
 import { AppConfig } from './AppConfig';
-import { Logger } from './Logger';
 
 export class EstyListingPoller {
   private readonly URL_BASE = 'https://openapi.etsy.com/v2';
@@ -40,17 +39,17 @@ export class EstyListingPoller {
     return forkJoin(this.getActiveListings(), this.checkpoint.getLastHash()).pipe(
       flatMap(results => {
         const sortedListings = this.sortEtsyListings(results[0]);
-        Logger.info('Recieved listings: ', sortedListings.length);
+        Logger.debug('Recieved listings: ', sortedListings.length);
         const lastHash = results[1];
-        Logger.info('Received previous checkpoint hash: ', lastHash);
+        Logger.debug('Received previous checkpoint hash: ', lastHash);
         const currentHash = this.toListingsHash(sortedListings);
-        Logger.info('Calculated current hash: ', currentHash);
+        Logger.debug('Calculated current hash: ', currentHash);
 
         if (currentHash === lastHash) {
-          Logger.info('Exiting, no changes detected.');
+          Logger.debug('Exiting, no changes detected.');
           return new EmptyObservable();
         } else {
-          Logger.info('Updating checkpointhash , fetching images if requested, and triggering event.');
+          Logger.debug('Updating checkpoint hash.');
           this.checkpoint.updateHash(currentHash);
           return this.config.includeImages
             ? forkJoin(sortedListings.map(listing => this.getImages(listing)))
@@ -125,7 +124,7 @@ export class EstyListingPoller {
     return this.callAPI(`/listings/${listing.listingId}/images`).pipe(
       map((result: any[]) => {
         listing.images = this.toListingImages(result);
-        Logger.debug(`Fetched images for listing[${listing.listingId}]: `, listing.images);
+        Logger.debug(`Fetched images for listing[${listing.listingId}]: ${listing.title}`);
         return listing;
       }),
       retry(3),

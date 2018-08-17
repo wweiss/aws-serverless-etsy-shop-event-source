@@ -1,9 +1,8 @@
+import { Logger } from '@codificationorg/commons-core';
 import { KMS } from 'aws-sdk';
 import { Observable } from 'rxjs/Observable';
 import { of } from 'rxjs/observable/of';
 import { Observer } from 'rxjs/Observer';
-
-import { Logger } from './Logger';
 
 export enum EnvVar {
   shopId = 'SHOP_ID',
@@ -53,7 +52,7 @@ export class AppConfig {
         if (err) {
           Logger.error('Error decrypting API Key: ', err.message);
         } else {
-          Logger.info('Found and decrypted API Key.');
+          Logger.debug('Found and decrypted API Key.');
           this.cachedApiKey = data.Plaintext.toString();
         }
         observer.next(this.cachedApiKey);
