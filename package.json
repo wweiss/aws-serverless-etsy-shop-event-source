@@ -1,6 +1,6 @@
 {
   "name": "aws-serverless-etsy-shop-event-source",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "A serverless app that periodically polls the public Etsy API and invokes a given lambda function to process changes to the active listings for a specific shop.",
   "main": "index.js",
   "author": "William Weiss <william@codification.org>",
@@ -14,7 +14,10 @@
     "lint": "tslint -p tsconfig.json",
     "precommit": "yarn format && yarn lint",
     "build": "yarn clean && yarn test && yarn package ",
-    "deploy": "gulp deploy"
+    "deploy": "gulp deploy",
+    "preversion": "yarn lint && yarn test",
+    "version": "yarn format && git add -A .",
+    "postversion": "git push && git push --tags"
   },
   "dependencies": {
     "@codificationorg/commons-core": "^1.0.0",
