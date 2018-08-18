@@ -102,6 +102,8 @@ In addition to the Etsy API key parameter, the app also requires the following a
 
 8.  **PollTimeout** (optional) - Maximum time in seconds to spend on a given polling sesssion. Default: 30.
 
+9.  **LoggingLevel** (optional) - The level of logging desired (`error,warn,info,verbose,debug` or `silly`).
+
 # Special Thanks
 
 Special thanks to AWS Labs and their excellent [Twitter Event Source](https://github.com/awslabs/aws-serverless-twitter-event-source) for providing the idea and foundations for this app.
