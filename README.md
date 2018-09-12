@@ -50,7 +50,7 @@ The app requires an Etsy developer API Key. The following steps walk you through
 
 Once you've created your Etsy API key, you can copy it as plain text into the **PlainTextApiKey** parameter of the serverless application. However, it is highly recommended that you do NOT pass this value in as plain text and instead encrypt it using an AWS Key Management Service (KMS) key. Once encrypted, you put the encrypted value into the **EncryptedApiKey** parameter and provide the **DecryptionKeyName** parameter as well. The reason the Plaintext fields are provided at all is so this app can be used in regions that do not support AWS KMS.
 
-The following subsections walk you through how to create a KMS key using the AWS console and encrypt your Twitter API Keys using the AWS CLI.
+The following subsections walk you through how to create a KMS key using the AWS console and encrypt your Etsy API Key using the AWS CLI.
 
 #### Create a new KMS Key
 
@@ -74,7 +74,7 @@ The following subsections walk you through how to create a KMS key using the AWS
 
 10. Click on your newly created key and copy its full ARN value.
 
-#### Encrypt Twitter API parameters with the AWS CLI
+#### Encrypt Etsy API parameter with the AWS CLI
 
 1.  Install the AWS CLI.
 
