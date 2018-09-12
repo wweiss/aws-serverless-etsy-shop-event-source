@@ -24,7 +24,7 @@ This serverless app creates an AWS Lambda event source by invoking a given lambd
 
 ## Etsy API Key Parameters
 
-The app requires the an Etsy developer API Key. The following steps walk you through registering the app with your Etsy Developer account to create these values.
+The app requires an Etsy developer API Key. The following steps walk you through registering the app with your Etsy Developer account to create these values.
 
 1.  Create an [Etsy](https://www.etsy.com) account if you do not already have one
 
