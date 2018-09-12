@@ -8,7 +8,7 @@ This serverless app creates an AWS Lambda event source by invoking a given lambd
 
 2.  A DynamoDB table is used to keep track of a checkpoint, which is a hash of the most recent results.
 
-3.  The poller function calls the public Etsy API and fetches all active listing for for the specified **ShopId** (provided by the app user).
+3.  The poller function calls the public Etsy API and fetches all active listing for the specified **ShopId** (provided by the app user).
 
 4.  The **ListingProcessor** lambda function (provided by the app user) is invoked with all active listing if there have been any changes based on the hash.
 
@@ -24,7 +24,7 @@ This serverless app creates an AWS Lambda event source by invoking a given lambd
 
 ## Etsy API Key Parameters
 
-The app requires the following Twitter API parameters: Consumer Key (API Key), Consumer Secret (API Secret), Access Token, and Access Token Secret. The following steps walk you through registering the app with your Twitter account to create these values.
+The app requires the an Etsy developer API Key. The following steps walk you through registering the app with your Etsy Developer account to create these values.
 
 1.  Create an [Etsy](https://www.etsy.com) account if you do not already have one
 
