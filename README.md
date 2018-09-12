@@ -84,13 +84,13 @@ The following subsections walk you through how to create a KMS key using the AWS
 
 ## Other Parameters
 
-In addition to the Etsy API key parameter, the app also requires the following additional parameters:
+In addition to the Etsy API key parameter, the app also requires some of the following parameters:
 
 1.  **ShopId** (required) - This is the Etsy specific ShopId used to identify the shop who's active listings are to be polled.
 
 2.  **ListingProcessorFunctionName** (required) - This is the name (not ARN) of the lambda function that will process listings gathered by the app.
 
-3.  **DecryptionKeyName** (required if providing encrypted the Etsy API Key) - This is the KMS key name of the key used to encrypt the Etsy API key parameter. Note, this must be just the key name (UUID that comes after key/ in the key ARN), not the full key ARN. It's assumed the key was created in the same account and region as the app deployment.
+3.  **DecryptionKeyName** (required if encrypting the Etsy API Key) - This is the KMS key name of the key used to encrypt the Etsy API key parameter. Note, this must be just the key name (UUID that comes after key/ in the key ARN), not the full key ARN. It's assumed the key was created in the same account and region as the app deployment.
 
 4.  **PollingFrequencyInMinutes** (optional) - The frequency at which the lambda will poll the Etsy API (in minutes). Default: 5.
 
