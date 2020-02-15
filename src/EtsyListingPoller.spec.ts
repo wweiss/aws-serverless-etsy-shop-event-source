@@ -24,9 +24,13 @@ test('EtsyListingPoller Unit Tests', t => {
     t.ok(checkpoint.lastHash.length > 0, 'properly sets the checkpoint hash');
 
     const lastHash = checkpoint.lastHash;
-    poller.doPoll().subscribe(() => t.fail('no listings should return without changes'), null, () => {
-      t.equal(checkpoint.lastHash, lastHash, 'hash does not change when no changes are detected');
-    });
+    poller.doPoll().subscribe(
+      () => t.fail('no listings should return without changes'),
+      null,
+      () => {
+        t.equal(checkpoint.lastHash, lastHash, 'hash does not change when no changes are detected');
+      },
+    );
   });
 });
 
