@@ -1,7 +1,9 @@
-import { Logger } from '@codificationorg/commons-core';
+import { LoggerFactory } from '@codification/cutwater-logging';
 import { Lambda } from 'aws-sdk';
 import { InvocationRequest } from 'aws-sdk/clients/lambda';
 import { EtsyListing, ListingProcessor } from './';
+
+const Logger = LoggerFactory.getLogger();
 
 export class LambdaListingProcessor implements ListingProcessor {
   private lambdaFunctionName: string;

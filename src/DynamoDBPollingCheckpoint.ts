@@ -1,10 +1,10 @@
-import { Logger } from '@codificationorg/commons-core';
+import { LoggerFactory } from '@codification/cutwater-logging';
 import { DynamoDB } from 'aws-sdk';
-import { Observable } from 'rxjs/Observable';
-import { Observer } from 'rxjs/Observer';
+import { GetItemOutput } from 'aws-sdk/clients/dynamodb';
 import { PollingCheckpoint } from './';
 
 const CHECKPOINT_ATTRIBUTE = 'checkpoint';
+const Logger = LoggerFactory.getLogger();
 
 export class DynamoDBPollingCheckpoint implements PollingCheckpoint {
   private readonly hashKey = 'CHECKPOINT_HASH';
@@ -16,7 +16,7 @@ export class DynamoDBPollingCheckpoint implements PollingCheckpoint {
     this.tableName = tableName;
   }
 
-  public getLastHash(): Observable<string> {
+  public async getLastHash(): Promise<string> {
     const params = {
       Key: {
         id: {
@@ -25,18 +25,11 @@ export class DynamoDBPollingCheckpoint implements PollingCheckpoint {
       },
       TableName: this.tableName,
     };
-    return Observable.create((observer: Observer<string>) => {
-      this.db.getItem(params, (err, data) => {
-        if (err) {
-          observer.error(err);
-        } else if (data.Item) {
-          observer.next(data.Item[CHECKPOINT_ATTRIBUTE].S);
-        } else {
-          observer.next('');
-        }
-        observer.complete();
-      });
-    });
+    const data: GetItemOutput = await this.db.getItem(params).promise();
+    if (data.Item && data.Item[CHECKPOINT_ATTRIBUTE] && data.Item[CHECKPOINT_ATTRIBUTE].S) {
+      return data.Item[CHECKPOINT_ATTRIBUTE].S || '';
+    }
+    return '';
   }
 
   public updateHash(latestHash: string): void {

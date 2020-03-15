@@ -1,8 +1,7 @@
-import { Logger } from '@codificationorg/commons-core';
+import { Config } from '@codification/cutwater-core';
+import { LoggerFactory } from '@codification/cutwater-logging';
 import { KMS } from 'aws-sdk';
-import { Observable } from 'rxjs/Observable';
-import { of } from 'rxjs/observable/of';
-import { Observer } from 'rxjs/Observer';
+import { DecryptResponse } from 'aws-sdk/clients/kms';
 
 export enum EnvVar {
   shopId = 'SHOP_ID',
@@ -15,49 +14,49 @@ export enum EnvVar {
   encryptedApiKey = 'ENCRYPTED_API_KEY',
 }
 
+const Logger = LoggerFactory.getLogger();
+
 export class AppConfig {
-  public readonly shopId: string = process.env[EnvVar.shopId];
-  public readonly perRequestTimeout: number = +process.env[EnvVar.perRequestTimeout];
-  public readonly includeImages: boolean = process.env[EnvVar.includeImages] === 'true' ? true : false;
-  public readonly requestsPerSecond: number = +process.env[EnvVar.requestsPerSecond];
-  public readonly listingProcessorFunctionName: string = process.env[EnvVar.listingProcessor];
-  public readonly tableName: string = process.env[EnvVar.pollingCheckpointTable];
+  public readonly shopId: string = Config.getRequired(EnvVar.shopId);
+  public readonly perRequestTimeout: number = +Config.getRequired(EnvVar.perRequestTimeout);
+  public readonly includeImages: boolean = Config.get(EnvVar.includeImages) === 'true' ? true : false;
+  public readonly requestsPerSecond: number = +Config.getRequired(EnvVar.requestsPerSecond);
+  public readonly listingProcessorFunctionName: string = Config.getRequired(EnvVar.listingProcessor);
+  public readonly tableName: string = Config.getRequired(EnvVar.pollingCheckpointTable);
 
   private cachedApiKey: string;
 
-  public get apiKey(): Observable<string> {
-    let rval: Observable<string>;
+  public get apiKey(): Promise<string> {
+    let rval: Promise<string>;
     if (!this.cachedApiKey) {
-      this.cachedApiKey = process.env[EnvVar.plainTextApiKey];
-      const encryptedApiKey = process.env[EnvVar.encryptedApiKey];
+      this.cachedApiKey = Config.get(EnvVar.plainTextApiKey);
+      const encryptedApiKey = Config.get(EnvVar.encryptedApiKey);
       if (encryptedApiKey) {
         rval = this.decryptApiKey(encryptedApiKey);
       } else {
         Logger.warn('Encrypted API Key not found, using plaintext.');
-        rval = of(this.cachedApiKey);
+        rval = Promise.resolve(this.cachedApiKey);
       }
     } else {
-      rval = of(this.cachedApiKey);
+      rval = Promise.resolve(this.cachedApiKey);
     }
     return rval;
   }
 
-  private decryptApiKey(encryptedApiKey: string): Observable<string> {
+  private async decryptApiKey(encryptedApiKey: string): Promise<string> {
     const kms = new KMS();
     const params = {
       CiphertextBlob: new Buffer(encryptedApiKey, 'base64'),
     };
-    return Observable.create((observer: Observer<string>) => {
-      kms.decrypt(params, (err, data) => {
-        if (err) {
-          Logger.error('Error decrypting API Key: ', err.message);
-        } else {
-          Logger.debug('Found and decrypted API Key.');
-          this.cachedApiKey = data.Plaintext.toString();
-        }
-        observer.next(this.cachedApiKey);
-        observer.complete();
-      });
-    });
+    try {
+      const data: DecryptResponse = await kms.decrypt(params).promise();
+      Logger.debug('Found and decrypted API Key.');
+      if (!!data && !!data.Plaintext) {
+        this.cachedApiKey = data.Plaintext.toString();
+      }
+    } catch (err) {
+      Logger.error('Error decrypting API Key: ', err.message);
+    }
+    return this.cachedApiKey;
   }
 }

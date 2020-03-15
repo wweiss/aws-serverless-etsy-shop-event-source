@@ -1,7 +1,5 @@
-import { Observable } from 'rxjs/Observable';
-
 export interface PollingCheckpoint {
-  getLastHash(): Observable<string>;
+  getLastHash(): Promise<string>;
   updateHash(currentHash: string): void;
 }
 

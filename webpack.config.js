@@ -1,33 +1,25 @@
-const path = require('path');
+"use strict";
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+const path = require("path");
 const webpack = require('webpack');
-
-const SRC_DIR = path.resolve(__dirname, 'src');
-const OUT_DIR = path.resolve(__dirname, 'dist');
-
-const LAMBDA_DIR = path.resolve(SRC_DIR, 'lambda');
-
-module.exports = (env, argv) => ({
+const webpackTask = require('@codification/cutwater-build-webpack').webpack;
+const isProduction = webpackTask.buildConfig.production;
+const webpackConfiguration = {
+    mode: isProduction ? 'production' : 'development',
     entry: {
-        etsyShopPoller: path.resolve(LAMBDA_DIR, 'EstyShopListingPollerHandler.ts'),
-    },
-    externals: [
-        'aws-sdk'
-    ],
-    resolve: {
-        extensions: [".ts", ".js"],
-    },
-    module: {
-        rules: [{
-            test: /\.ts?$/,
-            loader: "ts-loader",
-        }],
+        'etsyShopPoller': path.join(__dirname, webpackTask.buildConfig.libFolder, 'lambda', 'EstyShopListingPollerHandler.js')
     },
     output: {
-        path: OUT_DIR,
-        filename: '[name].js',
-        library: '[name]',
-        libraryTarget: 'umd'
+        libraryTarget: 'umd',
+        path: path.join(__dirname, webpackTask.buildConfig.distFolder),
+        filename: `[name].js`,
+        sourceMapFilename: "[name].js.map"
     },
+    devtool: "source-map",
+    externals: ['aws-sdk'],
     target: 'node',
     plugins: [new webpack.IgnorePlugin(/^electron$/)]
-});
+};
+module.exports = webpackConfiguration;

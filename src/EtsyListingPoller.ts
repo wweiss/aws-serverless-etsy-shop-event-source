@@ -1,15 +1,11 @@
-import { Logger } from '@codificationorg/commons-core';
-import * as got from 'got';
+import { LoggerFactory } from '@codification/cutwater-logging';
+import { default as got } from 'got';
 import { RateLimiter } from 'limiter';
 import * as md5 from 'md5';
-import { Observable } from 'rxjs/Observable';
-import { EmptyObservable } from 'rxjs/observable/EmptyObservable';
-import { forkJoin } from 'rxjs/observable/forkJoin';
-import { of } from 'rxjs/observable/of';
-import { Observer } from 'rxjs/Observer';
-import { flatMap, map, retry } from 'rxjs/operators';
 import { EtsyListing, ListingImage, ListingProcessor, PollingCheckpoint } from './';
 import { AppConfig } from './AppConfig';
+
+const Logger = LoggerFactory.getLogger();
 
 export class EstyListingPoller {
   private readonly URL_BASE = 'https://openapi.etsy.com/v2';
@@ -27,63 +23,51 @@ export class EstyListingPoller {
   }
 
   public poll(): void {
-    this.doPoll().subscribe(
-      pollResults => {
-        this.processor.process(pollResults);
-      },
-      err => Logger.error('Polling encountered an error: ', err),
-    );
+    this.doPoll()
+      .then(results => this.processor.process(results))
+      .catch(err => Logger.error('Polling encountered an error: ', err));
   }
 
-  public doPoll(): Observable<EtsyListing[]> {
-    return forkJoin(this.getActiveListings(), this.checkpoint.getLastHash()).pipe(
-      flatMap(results => {
-        const sortedListings = this.sortEtsyListings(results[0]);
-        Logger.debug('Recieved listings: ', sortedListings.length);
-        const lastHash = results[1];
-        Logger.debug('Received previous checkpoint hash: ', lastHash);
-        const currentHash = this.toListingsHash(sortedListings);
-        Logger.debug('Calculated current hash: ', currentHash);
+  public async doPoll(): Promise<EtsyListing[]> {
+    const sortedListings: EtsyListing[] = this.sortEtsyListings(await this.getActiveListings());
+    Logger.debug('Recieved listings: ', sortedListings.length);
 
-        if (currentHash === lastHash) {
-          Logger.debug('Exiting, no changes detected.');
-          return new EmptyObservable();
-        } else {
-          Logger.debug('Updating checkpoint hash.');
-          this.checkpoint.updateHash(currentHash);
-          return this.config.includeImages
-            ? forkJoin(sortedListings.map(listing => this.getImages(listing)))
-            : of(sortedListings);
-        }
-      }),
-    );
+    const lastHash: string = await this.checkpoint.getLastHash();
+    Logger.debug('Received previous checkpoint hash: ', lastHash);
+    const currentHash = this.toListingsHash(sortedListings);
+    Logger.debug('Calculated current hash: ', currentHash);
+
+    if (currentHash === lastHash) {
+      Logger.debug('Exiting, no changes detected.');
+      return [];
+    } else {
+      Logger.debug('Updating checkpoint hash.');
+      this.checkpoint.updateHash(currentHash);
+      if (this.config.includeImages) {
+        await Promise.all(sortedListings.map(listing => this.getImages(listing)));
+      }
+      return sortedListings;
+    }
   }
 
-  private getActiveListings(): Observable<EtsyListing[]> {
-    return this.callAPI(`/shops/${this.config.shopId}/listings/active`).pipe(
-      map((result: any[]) => {
-        return result.map(listing => this.toEtsyListing(listing));
-      }),
-      retry(3),
-    );
+  private async getActiveListings(): Promise<EtsyListing[]> {
+    const results: any[] = await this.callAPI(`/shops/${this.config.shopId}/listings/active`);
+    return results.map(listing => this.toEtsyListing(listing));
   }
 
-  private callAPI(url: string): Observable<any[]> {
+  private callAPI(url: string): Promise<any[]> {
     const baseUrl = `${this.URL_BASE}${url}`;
-    return Observable.create((observer: Observer<any[]>) => {
+    return new Promise((resolve, reject) => {
       this.limiter.removeTokens(1, () => {
-        this.config.apiKey.subscribe(apiKey => {
-          Logger.debug('Calling api url: ', baseUrl);
-          got(`${baseUrl}?api_key=${apiKey}`, {
-            json: true,
-            timeout: this.config.perRequestTimeout,
+        this.config.apiKey
+          .then(apiKey => {
+            return got(`${baseUrl}?api_key=${apiKey}`, {
+              json: true,
+              timeout: this.config.perRequestTimeout,
+            });
           })
-            .then(resp => {
-              observer.next(resp.body.results);
-              observer.complete();
-            })
-            .catch(err => observer.error(err));
-        });
+          .then(resp => resolve(resp.body.results))
+          .catch(err => reject(err));
       });
     });
   }
@@ -120,15 +104,11 @@ export class EstyListingPoller {
     return md5(listings.map(listing => listing.hash).join(''));
   }
 
-  private getImages(listing: EtsyListing): Observable<EtsyListing> {
-    return this.callAPI(`/listings/${listing.listingId}/images`).pipe(
-      map((result: any[]) => {
-        listing.images = this.toListingImages(result);
-        Logger.debug(`Fetched images for listing[${listing.listingId}]: ${listing.title}`);
-        return listing;
-      }),
-      retry(3),
-    );
+  private async getImages(listing: EtsyListing): Promise<EtsyListing> {
+    const results: any[] = await this.callAPI(`/listings/${listing.listingId}/images`);
+    listing.images = this.toListingImages(results);
+    Logger.debug(`Fetched images for listing[${listing.listingId}]: ${listing.title}`);
+    return listing;
   }
 
   private toListingImages(images: any[]): any[] {
