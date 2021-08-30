@@ -44,7 +44,7 @@ export class DynamoDBPollingCheckpoint implements PollingCheckpoint {
       },
       TableName: this.tableName,
     };
-    this.db.putItem(params, (err, data) => {
+    this.db.putItem(params, err => {
       if (err) {
         Logger.error('Error while updating checkpoint hash: ', err);
       } else {
