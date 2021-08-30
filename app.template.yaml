@@ -1,23 +1,35 @@
 AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::Serverless-2016-10-31
+
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: EtsyShopEventSource
+    Description: "A serverless app that periodically polls the public Etsy API and invokes a given lambda function to process changes to the active listings for a specific shop."
+    Author: William Weiss
+    SpdxLicenseId: MIT
+    LicenseUrl: LICENSE
+    ReadmeUrl: README.md
+    Labels: ["lambda", "events", "polling", "etsy", "shop", "listings"]
+    HomePageUrl: https://github.com/wweiss/aws-serverless-etsy-shop-event-source
+    SemanticVersion: 0.0.1
+    SourceCodeUrl: https://github.com/wweiss/aws-serverless-etsy-shop-event-source
+
 Parameters:
   EncryptedApiKey:
     Type: String
-    Default: ''
+    Default: ""
     Description: Encrypted Etsy API Key encrypted ciphertext blob as a base64-encoded string.
   DecryptionKeyName:
     Type: String
     Default: invalid
-    Description:
-      KMS key name of the key used to encrypt the Etsy API Key. Note, this must be just the key name (UUID), not the full key ARN. It's assumed the key is owned by the same account, in the same region as the app.
+    Description: KMS key name of the key used to encrypt the Etsy API Key. Note, this must be just the key name (UUID), not the full key ARN. It's assumed the key is owned by the same account, in the same region as the app.
   PlainTextApiKey:
     Type: String
-    Default: ''
+    Default: ""
     Description: Etsy API Key in plain text.
   ListingProcessorFunctionName:
     Type: String
-    Description:
-      Name of lambda function that should be invoked to process listings. Note, this must be a function name and not a function ARN.
+    Description: Name of lambda function that should be invoked to process listings. Note, this must be a function name and not a function ARN.
   ShopId:
     Type: String
     Description: ShopId to poll for active listings.
@@ -47,8 +59,7 @@ Parameters:
     Type: Number
     MinValue: 1
     Default: 5
-    Description:
-      Max number of requests that can be made to the api per second.  This should not be changed unless an exception has been requested from Etsy.
+    Description: Max number of requests that can be made to the api per second.  This should not be changed unless an exception has been requested from Etsy.
   LoggingLevel:
     Type: String
     Default: error
@@ -62,7 +73,8 @@ Parameters:
     Description: (Optional) The level of logging desired (error, warn, info, verbose, debug or silly).
 
 Conditions:
-  IsPollingFrequencyInMinutesSingular: !Equals [!Ref PollingFrequencyInMinutes, 1]
+  IsPollingFrequencyInMinutesSingular:
+    !Equals [!Ref PollingFrequencyInMinutes, 1]
 
 Resources:
   EstyShopListingPoller:
@@ -99,8 +111,8 @@ Resources:
             Schedule:
               !If [
                 IsPollingFrequencyInMinutesSingular,
-                !Sub 'rate(${PollingFrequencyInMinutes} minute)',
-                !Sub 'rate(${PollingFrequencyInMinutes} minutes)',
+                !Sub "rate(${PollingFrequencyInMinutes} minute)",
+                !Sub "rate(${PollingFrequencyInMinutes} minutes)",
               ]
 
   PollingCheckpoint:
