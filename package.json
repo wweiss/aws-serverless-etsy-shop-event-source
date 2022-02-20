@@ -28,7 +28,9 @@
     "releaseCommitMessageFormat": "chore(release): {{currentTag}} [skip-ci]"
   },
   "resolutions": {
-    "glob-parent": "^5.1.2"
+    "glob-parent": "^5.1.2",
+    "ansi-regex": "^5.0.1",
+    "node-forge": "^1.0.0"
   },
   "dependencies": {
     "@codification/cutwater-core": "^0.x",
