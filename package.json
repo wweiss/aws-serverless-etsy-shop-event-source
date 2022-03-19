@@ -1,6 +1,6 @@
 {
   "name": "aws-serverless-etsy-shop-event-source",
-  "version": "1.3.9",
+  "version": "1.3.10",
   "description": "A serverless app that periodically polls the public Etsy API and invokes a given lambda function to process changes to the active listings for a specific shop.",
   "main": "index.js",
   "author": "William Weiss <william@codification.org>",
