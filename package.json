@@ -35,7 +35,7 @@
   "dependencies": {
     "@codification/cutwater-core": "^0.x",
     "@codification/cutwater-logging": "^0.x",
-    "got": "^8.3.0",
+    "got": "^11.8.5",
     "limiter": "^1.1.3",
     "md5": "^2.2.1",
     "node-forge": "^1.0.0"
